@@ -39,12 +39,16 @@ public class PacmanController {
         // à attendre une update (par exemple si on veut aller à gauche alors qu'on
         // allait à droite, sur la meme ligne)
         if (newDirection == Direction.NORTH && PacMan.INSTANCE.getDirection() == Direction.SOUTH) {
+            lastInputDirection = newDirection;
             PacMan.INSTANCE.setDirection(newDirection);
         } else if (newDirection == Direction.SOUTH && PacMan.INSTANCE.getDirection() == Direction.NORTH) {
+            lastInputDirection = newDirection;
             PacMan.INSTANCE.setDirection(newDirection);
         } else if (newDirection == Direction.EAST && PacMan.INSTANCE.getDirection() == Direction.WEST) {
+            lastInputDirection = newDirection;
             PacMan.INSTANCE.setDirection(newDirection);
         } else if (newDirection == Direction.WEST && PacMan.INSTANCE.getDirection() == Direction.EAST) {
+            lastInputDirection = newDirection;
             PacMan.INSTANCE.setDirection(newDirection);
         } else {
             // sinon on update le "lastInputDirection" pour enregistrer le souhait de
@@ -91,7 +95,7 @@ public class PacmanController {
          * 1,934040 puis en 2,003983 mais
          * jamais pile en 2,0 donc on teste quand il entre dans un certain ecart.
          */
-        double tolerance = 0.025;
+        double tolerance = 0.1;
 
         // ensuite on calcule au vu des ses deux coordonées s'il peut passer.
         boolean isCenteredX = Math.abs(currentPos.getX() - Math.round(currentPos.getX())) < tolerance;

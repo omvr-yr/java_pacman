@@ -6,6 +6,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
 import javafx.stage.Stage;
+import main.java.gui.ElementUnlocker;
+import main.java.gui.FileIntegerOperations;
 import config.MazeConfig;
 import model.MazeState;
 import model.Ghost;
@@ -22,6 +24,8 @@ public class App extends Application {
         gameScene.setOnKeyReleased(pacmanController::keyReleasedHandler);
         var maze = new MazeState(MazeConfig.mapLoader("map1.map"), pacmanController);
         primaryStage.setScene(gameScene);
-        Menu startMenu = new Menu(primaryStage, root, gameScene, maze);
+        ElementUnlocker Element = new ElementUnlocker();
+        FileIntegerOperations operations = new FileIntegerOperations();
+        Menu startMenu = new Menu(primaryStage, root, gameScene, maze,Element,operations);
     }
 }

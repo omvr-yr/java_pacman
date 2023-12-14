@@ -1,7 +1,7 @@
 package config;
 
-public record Cell(boolean northWall, boolean eastWall, boolean southWall, boolean westWall, Cell.Content initialContent) {
-    public enum Content { NOTHING, DOT, ENERGIZER}
+public record Cell(boolean northWall, boolean eastWall, boolean southWall, boolean westWall, Cell.Content initialContent, int estInv) {
+    public enum Content { NOTHING, DOT, ENERGIZER,FRUIT}
 
     public boolean estN(){
         if(this.northWall){

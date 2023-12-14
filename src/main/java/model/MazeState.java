@@ -13,22 +13,42 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.io.IOException;
+import java.util.List;
+import java.io.FileNotFoundException;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import static config.Cell.Content.FRUIT;
 
 //import apple.laf.JRSUIConstants.Direction;
 
 import static model.Ghost.*;
 
 public final class MazeState {
+    public static boolean son=true;
+    public static boolean pacson=true;
+    private static boolean sonenergized=false;
+    private static Clip clip;
+    private static Clip clip2;
+    private static Clip clip3;
+    private static Clip clip4;
+    private static Clip clip5;
+    private static boolean audio;
     private  MazeConfig config;
     private final int height;
     private final int width;
-
+    private static long startTime = System.currentTimeMillis();
     private final boolean[][] gridState;
 
     private final List<Critter> critters;
     private int score;
-
+    public static int niv=0;
     private final Map<Critter, RealCoordinates> initialPos;
     private int lives = 3;
     private int nombrepacgomme = 551;
@@ -166,6 +186,16 @@ public final class MazeState {
             addScore(1);
             nombrepacgomme--;
             gridState[pacPos.y() % height][pacPos.x() % width] = true;
+            long endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            if(elapsedTime>800||!audio){
+                if(audio&&son){
+                    clip.stop();
+                    clip.close();
+                }
+                sonpacgomme();
+                startTime=endTime;
+            }
         }
         for (var critter : critters) {
             if (critter instanceof PacMan) {
@@ -175,9 +205,18 @@ public final class MazeState {
                     p.setEnergized(true);
                     //System.out.println(p.isEnergized());
                     config.setPacGomme(pacPos.x(), pacPos.y(), false);
+                    if(pacson){
+                        pacson=false;
+                        sonsuper();
+                    }
+                    else{
+                        clip4.stop();
+                        clip4.close();
+                        sonsuper();
+                    }
                     addScore(50);
                     nombrepacgomme--;
-                    ajoutScoreP();
+                    ajoutScore(49);
                 }
                 if (p.isEnergized()) {
                     //System.out.println("Checkpoint : " + p.getEnergizationTime());
@@ -189,11 +228,17 @@ public final class MazeState {
                         System.out.println("Fin du pouvoir");
                     }
                 }
+                if(config.getFruit()[pacPos.y()][pacPos.x()]){
+                    config.getFruit()[pacPos.y()][pacPos.x()] = false;
+                    addScore(100);
+                    ajoutScore(99);
+                }
             }
             if (critter instanceof Ghost && critter.getPos().round().equals(pacPos)) {
                 if (PacMan.INSTANCE.isEnergized()) {
+                    sonmange();
                     addScore(10);
-                    ajoutScoreF();
+                    ajoutScore(9);
                     resetCritter(critter);
 
                 } else {
@@ -207,6 +252,7 @@ public final class MazeState {
     public void annule_pouvoir_de_pacman(){
      PacMan.INSTANCE.setEnergized(false);
     }
+
     public void resetpacgomme(){
         for(int i = 0 ; i < config.getKeepPacgomme().length ; i++){
             for(int y = 0 ; y < config.getKeepPacgomme()[0].length; y++){
@@ -218,15 +264,22 @@ public final class MazeState {
     }
 
     private void addScore(int increment) {
+        if(score==0){
+            sondebut();
+        }
         score += increment;
-        ajoutScore();
+        ajoutScore(1);
     }
 
     private void playerLost() {
         // FIXME: this should be displayed in the JavaFX view, not in the console. A
         // game over screen would be nice too.
         lives--;
-
+        if(son&&sonenergized){
+            clip4.stop();
+            clip4.close();
+        }
+        sonmort();
         Pinky.reset();
         Inky.reset();
         Clyde.reset();
@@ -253,6 +306,7 @@ public final class MazeState {
     public void resetCritters() {
         for (var critter : critters)
             resetCritter(critter);
+        
     }
 
     public MazeConfig getConfig() {
@@ -267,7 +321,7 @@ public final class MazeState {
         this.config=Maze;
     }
 
-    public static void ajoutScore(){
+    public static void ajoutScore(int n){
         
         // Chemin vers le fichier score.txt
         String lien = "score.txt";
@@ -280,7 +334,7 @@ public final class MazeState {
             scanner.close();
 
             // Incrémentation du score
-            scoreA += 1;
+            scoreA += n;
 
             // Réécriture du nouveau score dans le fichier
             FileWriter fileWriter = new FileWriter(file);
@@ -291,51 +345,108 @@ public final class MazeState {
         }
     }
 
-    public static void ajoutScoreP(){
-        
-        // Chemin vers le fichier score.txt
-        String lien = "score.txt";
-
+    public void classement() {
+        String lien = "classement.txt";
         try {
-            // Lecture du contenu du fichier
             File file = new File(lien);
             Scanner scanner = new Scanner(file);
-            int scoreA = scanner.nextInt();
+            int currentLine = 1;
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if (currentLine == niv) {
+                    int bestScore = Integer.valueOf(line);
+                    if (this.score > bestScore) {
+                        String newLine = String.valueOf(this.score);
+                        Path path = Paths.get(lien);
+                        List<String> lines = Files.readAllLines(path);
+                        lines.set(currentLine - 1, newLine);
+                        Files.write(path, lines);
+                    }
+                    break;
+                }
+                currentLine++;
+            }
             scanner.close();
-
-            // Incrémentation du score
-            scoreA += 49;
-
-            // Réécriture du nouveau score dans le fichier
-            FileWriter fileWriter = new FileWriter(file);
-            fileWriter.write(Integer.toString(scoreA));
-            fileWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void ajoutScoreF(){
-        
-        // Chemin vers le fichier score.txt
-        String lien = "score.txt";
+    public static void sonpacgomme(){
+        if(son){
+            try {
+                File audioFile = new File("src/main/resources/pacgomme.wav");
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);            
+                clip = AudioSystem.getClip();
+                clip.open(audioInputStream);
+                clip.start();
+                audio=true;           
+            } catch (Exception e) {
+                e.printStackTrace();
+                }
+        }
+    }
 
-        try {
-            // Lecture du contenu du fichier
-            File file = new File(lien);
-            Scanner scanner = new Scanner(file);
-            int scoreA = scanner.nextInt();
-            scanner.close();
+    private static void sonmort() {
+        if(son){
+            try{
+                File audioFile = new File("src/main/resources/death.wav");
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);            
+                clip2 = AudioSystem.getClip();
+                clip2.open(audioInputStream);
+                clip2.start();
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-            // Incrémentation du score
-            scoreA += 9;
+    private static void sonmange() {
+        if(son){
+            try{
+                File audioFile = new File("src/main/resources/mange.wav");
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);            
+                clip3 = AudioSystem.getClip();
+                clip3.open(audioInputStream);
+                clip3.start();
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-            // Réécriture du nouveau score dans le fichier
-            FileWriter fileWriter = new FileWriter(file);
-            fileWriter.write(Integer.toString(scoreA));
-            fileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private static void sonsuper() {
+        if(son){
+            try{
+                File audioFile = new File("src/main/resources/super.wav");
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);            
+                clip4 = AudioSystem.getClip();
+                clip4.open(audioInputStream);
+                clip4.start();
+                sonenergized=true;
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void sondebut() {
+        if(son){
+            try{
+                File audioFile = new File("src/main/resources/debut.wav");
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);            
+                clip5 = AudioSystem.getClip();
+                clip5.open(audioInputStream);
+                clip5.start();
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

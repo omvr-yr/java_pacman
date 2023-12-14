@@ -13,9 +13,10 @@ import java.io.FileWriter; // permet d'écrire dans des fichiers.txt
 import java.io.IOException; //permet de gérer les erreurs d'exception IO (avec les fichiers)
 import java.util.ArrayList;
 import java.util.Random;
+import static config.Cell.Content.FRUIT;
 
 public class MazeConfig {
-    public MazeConfig(Cell[][] grid, boolean[][] gomme, IntCoordinates pacManPos, IntCoordinates blinkyPos,
+    public MazeConfig(Cell[][] grid, boolean[][] gomme,boolean[][] fruit, IntCoordinates pacManPos, IntCoordinates blinkyPos,
             IntCoordinates pinkyPos,
             IntCoordinates inkyPos, IntCoordinates clydePos) {
         this.grid = new Cell[grid.length][grid[0].length];
@@ -30,14 +31,15 @@ public class MazeConfig {
         this.pinkyPos = pinkyPos;
         this.clydePos = clydePos;
         pacGomme = gomme;
+        Fruits = fruit;
         KeepPacgomme = new int[pacGomme.length][pacGomme[0].length];
         keep();
     }
     private int[][] KeepPacgomme;
     private final Cell[][] grid;
     private boolean[][] pacGomme;
+    private boolean[][] Fruits;
     private final IntCoordinates pacManPos, blinkyPos, pinkyPos, inkyPos, clydePos;
-
    
 
     public IntCoordinates getPacManPos() {
@@ -80,6 +82,10 @@ public class MazeConfig {
         return grid[Math.floorMod(pos.y(), getHeight())][Math.floorMod(pos.x(), getWidth())];
     }
 
+    public boolean[][] getFruit(){
+        return Fruits;
+    }
+
     public int[][] getKeepPacgomme() {
         return KeepPacgomme;
     }
@@ -106,7 +112,7 @@ public class MazeConfig {
          * Format de la map :
          * # = un mur
          * . = un point
-         * 
+         * F = un Fruit
          * * = un pac-gomme
          * = rien
          */
@@ -148,11 +154,12 @@ public class MazeConfig {
 
         Cell[][]tab = new Cell[a][b];
         boolean[][]gomme = new boolean[a][b];
+        boolean[][] fruit = new boolean[a][b];
         String[][]t = new String[c][d];
         int f = 0;
         int g = 0;
         try {//partie du code qui récupère les informations dans le fichier.map qui contient le format de map
-            File myObj = new File(x);
+            File myObj = new File("./src/main/resources/"+x);
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
             myReader.useDelimiter("");
@@ -179,6 +186,7 @@ public class MazeConfig {
                     boolean w = false;
                     boolean s = false;
                     boolean e = false;
+                    int i = 0;
                     if (t[k - 1][l].equals("#")) {
                         n = true;
                     }
@@ -191,8 +199,9 @@ public class MazeConfig {
                     if (t[k][l + 1].equals("#")) {
                         e = true;
                     }
-                    tab[f][g] = new Cell(n, e, s, w, DOT);
+                    tab[f][g] = new Cell(n, e, s, w, DOT, i);
                     gomme[f][g] = false;
+                    fruit[f][g] = false;
                     g++;
                     if (g % b == 0 && g != 0) {
                         f++;
@@ -203,6 +212,7 @@ public class MazeConfig {
                     boolean w = false;
                     boolean s = false;
                     boolean e = false;
+                    int i = 0;
                     if (t[k - 1][l].equals("#")) {
                         n = true;
                     }
@@ -215,8 +225,9 @@ public class MazeConfig {
                     if (t[k][l + 1].equals("#")) {
                         e = true;
                     }
-                    tab[f][g] = new Cell(n, e, s, w, ENERGIZER);
+                    tab[f][g] = new Cell(n, e, s, w, ENERGIZER, i);
                     gomme[f][g] = true;
+                    fruit[f][g] = false;
                     g++;
                     if (g % b == 0 && g != 0) {
                         f++;
@@ -227,6 +238,7 @@ public class MazeConfig {
                     boolean w = false;
                     boolean s = true;
                     boolean e = false;
+                    int i = 1;
                     if (t[k - 1][l].equals("#")) {
                         n = true;
                     }
@@ -236,8 +248,9 @@ public class MazeConfig {
                     if (t[k][l + 1].equals("#")) {
                         e = true;
                     }
-                    tab[f][g] = new Cell(n, e, s, w, ENERGIZER);
-                    gomme[f][g] = true;
+                    tab[f][g] = new Cell(n, e, s, w, DOT, i);
+                    gomme[f][g] = false;
+                    fruit[f][g] = false;
                     g++;
                     if (g % b == 0 && g != 0) {
                         f++;
@@ -248,20 +261,22 @@ public class MazeConfig {
                     boolean w = false;
                     boolean s = false;
                     boolean e = false;
+                    int i = 0;
                     if (t[k - 1][l].equals("#")) {
                         n = true;
                     }
                     if (t[k][l - 1].equals("#")) {
                         w = true;
                     }
-                    if (t[k + 1][l].equals("#")) {
+                    if (t[k + 1][l].equals("#") | t[k + 1][l].equals("F") ) {
                         s = true;
                     }
                     if (t[k][l + 1].equals("#")) {
                         e = true;
                     }
-                    tab[f][g] = new Cell(n, e, s, w, NOTHING);
+                    tab[f][g] = new Cell(n, e, s, w, NOTHING, i);
                     gomme[f][g] = false;
+                    fruit[f][g] = false;
                     g++;
                     if (g % b == 0 && g != 0) {
                         f++;
@@ -273,16 +288,17 @@ public class MazeConfig {
                     boolean w = false;
                     boolean s = false;
                     boolean e = false;
-                    if (t[k - 1][l].equals(".")) {
+                    int i = 0;
+                    if (t[k - 1][l].equals(".") | t[k - 1][l].equals(" ") ) {
                         n = true;
                     }
-                    if (t[k][l - 1].equals(".")) {
+                    if (t[k][l - 1].equals(".")| t[k][l - 1].equals(" ")) {
                         w = true;
                     }
-                    if (t[k + 1][l].equals(".")) {
+                    if (t[k + 1][l].equals(".") | t[k + 1][l].equals("F")) {
                         s = true;
                     }
-                    if (t[k][l + 1].equals(".")) {
+                    if (t[k][l + 1].equals(".") | t[k][l+1].equals(" ")) {
                         e = true;
                     }
                     if (t[k - 1][l].equals("*")) {
@@ -294,11 +310,43 @@ public class MazeConfig {
                     if (t[k + 1][l].equals("*")) {
                         s = true;
                     }
+                    if (t[k + 1][l].equals("_")) {
+                        s = true;
+                    }
                     if (t[k][l + 1].equals("*")) {
                         e = true;
                     }
-                    tab[f][g] = new Cell(n, e, s, w, NOTHING);
+                    tab[f][g] = new Cell(n, e, s, w, NOTHING, i);
                     gomme[f][g] = false;
+                    fruit[f][g] = false;
+                    g++;
+                    if (g % b == 0 && g != 0) {
+                        f++;
+                        g = 0;
+                    }
+                }else if(t[k][l].equals("F")){
+                    boolean n = false;
+                    boolean w = false;
+                    boolean s = false;
+                    boolean e = false;
+                    int i = 0;
+                    if (t[k - 1][l].equals("#")) {
+                        n = true;
+                    }
+                    if (t[k][l - 1].equals("#")) {
+                        w = true;
+                    }
+                    if (t[k + 1][l].equals("#")) {
+                        s = true;
+                    }
+                    if (t[k][l + 1].equals("#")) {
+                        e = true;
+                    }
+
+
+                    tab[f][g] = new Cell(n, e, s, w,FRUIT,i);
+                    gomme[f][g] = false;
+                    fruit[f][g] = true;
                     g++;
                     if (g % b == 0 && g != 0) {
                         f++;
@@ -307,7 +355,7 @@ public class MazeConfig {
                 }
             }
         }
-        MazeConfig e = new MazeConfig(tab,gomme, new IntCoordinates(0, 0),new IntCoordinates(o+2, p), new IntCoordinates(o+2, p-1), new IntCoordinates(o+1, p), new IntCoordinates(o+3, p));
+        MazeConfig e = new MazeConfig(tab,gomme,fruit, new IntCoordinates(0, 0),new IntCoordinates(o+2, p), new IntCoordinates(o+2, p-1), new IntCoordinates(o+1, p), new IntCoordinates(o+3, p));
         return e;
     }
 

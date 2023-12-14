@@ -36,7 +36,9 @@ public final class CritterGraphicsFactory {
             default -> "";
         };
         Image image = new Image(url);
-     
+        Image f = new Image("src_main_resources_ghost_pinky.png", scale * size, scale * size, true, true);
+        Image u = new Image(url, scale * size, scale * size, true, true);
+
         var imagev = new ImageView(new Image(url, scale * size, scale * size, true, true));
         
         return new GraphicsUpdater() {
@@ -76,7 +78,12 @@ public final class CritterGraphicsFactory {
                         case NONE -> imagev.setRotate(rota);
                     }
                 } else {
-                   
+                    if(PacMan.INSTANCE.isEnergized()){
+                        imagev.setImage(f);
+                    } else {
+                        imagev.setImage(u);
+                    }
+                    
                     var dir = critter.getDirection();
                     switch (dir) {
                         case EAST -> {
