@@ -1,0 +1,6 @@
+. régler les déplacements de pacman (Marianne)
+. faire un labyrinthe (Antoine)
+. les fantômes à faire déplacer (Firetnt)
+. menu (Xoltox V2)
+. menu de fermeture (Y-R)
+. afficher le nombre de vies et points (Adjlout Amazigh)
